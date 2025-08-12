@@ -1,7 +1,9 @@
+<!-- @format -->
 <script setup></script>
 
 <template>
-  <div>App组件</div>
+  <!-- 一级路由出口 -->
+  <router-view />
 </template>
 
-<style scoped></style>
+<style lang="scss" scoped></style>
