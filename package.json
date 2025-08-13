@@ -11,6 +11,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "axios": "^1.11.0",
+    "crypto-js": "^4.2.0",
     "element-plus": "^2.10.6",
     "fast-glob": "^3.3.3",
     "pinia": "^3.0.3",
