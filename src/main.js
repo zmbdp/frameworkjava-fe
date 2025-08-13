@@ -1,19 +1,25 @@
 // src/main.js
 import { createApp } from 'vue';
 import ElementPlus from 'element-plus';
+
 import 'element-plus/dist/index.css';
+
 import App from './App.vue';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-import 'virtual:svg-icons-register'
-import SvgIcon from './components/SvgIcon.vue'
+
+
 
 // 导入 index.scss 样式文件
 import '@/styles/index.scss';
+
 // 导入 pinia 实例
 import pinia from '@/stores';
 // 导入路由实例
 import router from '@/router';
 
+import SvgIcon from './components/SvgIcon.vue'
+
+import 'virtual:svg-icons-register'
 
 const app = createApp(App);
 
