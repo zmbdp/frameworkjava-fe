@@ -28,19 +28,17 @@ instance.interceptors.request.use(
 )
 
 // 是否显示重新登录确认提示框
-const relogin = {
-  show: false
-}
+let isRelogin = false
 // 添加响应拦截器
 instance.interceptors.response.use(
   (response) => {
     // 解构
-    const { code, data, msg } = response.data
+    const { code, data, errMsg } = response.data
     if (code !== 200000) {
       // 统一的错误提示
-      ElMessage.error(msg)
+      ElMessage.error(errMsg)
       // 返回一个失败态的 Promise 实例
-      return Promise.reject(new Error(msg))
+      return Promise.reject(new Error(errMsg))
     }
     // 否则返回纯粹的 data 数据
     return data
@@ -50,9 +48,15 @@ instance.interceptors.response.use(
     const { response, status } = error
     if (status === 401) {
       // token 过期
+      const userStore = useUserStore()
+      
+      if (isRelogin) {
+        // 如果已经弹出了登录框，则直接拒绝该请求
+        return Promise.reject(new Error('token过期'))
+      }
+      
+      isRelogin = true
       try {
-        if (relogin.show) return
-        relogin.show = true
         // 询问
         await ElMessageBox.confirm(
           '登录状态已过期,您可以继续留在当前页或重新登录',
@@ -63,27 +67,30 @@ instance.interceptors.response.use(
             type: 'warning'
           }
         )
-        // 清空token和用户信息
-        const userStore = useUserStore()
-        userStore.logoutAction()
+        // 用户点击重新登录，清除token并跳转到登录页
+        userStore.removeToken()
+        userStore.removeUserInfo()
         // 跳转至登录页
-        router.push(
-          `/login?redirectUrl=${router.currentRoute.value.path}`
-        )
+        router.push('/login')
         return Promise.reject(new Error('token过期'))
       } catch (e) {
+        // 用户点击取消按钮或关闭弹窗，清除token但保留在当前页面
+        userStore.removeToken()
+        userStore.removeUserInfo()
+        ElMessage.info('已清除登录状态，页面功能可能受限')
+        return Promise.reject(new Error('用户取消重新登录'))
       } finally {
-        relogin.show = false
+        isRelogin = false
       }
     } else {
-      const { code, msg } = response.data
+      const { code, errMsg } = response.data
       // 统一的错误提示
-      ElMessage.error(msg)
+      ElMessage.error(errMsg)
 
       // 返回失败态的Promise实例，并携带错误信息
       return Promise.reject({
         code,
-        msg
+        errMsg
       })
     }
   }

@@ -52,7 +52,7 @@ export const getDictTypeListApi = ({
 }) => {
   return request({
     method: 'get',
-    url: '/admin/dictionary_type/list',
+    url: '/admin/dictionary/listType',
     params: {
       value,
       typeKey,
@@ -68,7 +68,7 @@ export const getDictTypeListApi = ({
 export const postDictTypeApi = ({ remark, value, typeKey }) => {
   return request({
     method: 'post',
-    url: '/admin/dictionary_type/add',
+    url: '/admin/dictionary/addType',
     data: {
       remark,
       value,
@@ -83,7 +83,7 @@ export const postDictTypeApi = ({ remark, value, typeKey }) => {
 export const putDictTypeApi = ({ typeKey, value, remark }) => {
   return request({
     method: 'post',
-    url: '/admin/dictionary_type/edit',
+    url: '/admin/dictionary/editType',
     data: {
       typeKey,
       value,
@@ -103,7 +103,7 @@ export const getDictDataListApi = ({
 }) => {
   return request({
     method: 'get',
-    url: '/admin/dictionary_data/list',
+    url: '/admin/dictionary/listData',
     params: {
       pageNo,
       pageSize,
@@ -126,7 +126,7 @@ export const postDictDataApi = ({
 }) => {
   return request({
     method: 'post',
-    url: '/admin/dictionary_data/add',
+    url: '/admin/dictionary/addData',
     data: {
       typeKey,
       value,
@@ -144,7 +144,7 @@ export const postDictDataApi = ({
 export const putDictDataApi = ({ dataKey, value, remark, sort }) => {
   return request({
     method: 'post',
-    url: '/admin/dictionary_data/edit',
+    url: '/admin/dictionary/editData',
     data: {
       dataKey,
       value,

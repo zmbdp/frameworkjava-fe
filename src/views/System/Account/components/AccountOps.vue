@@ -1,16 +1,17 @@
 <script setup>
-  import { reactive, ref } from 'vue'
+  import { reactive, ref, watch } from 'vue';
 
-  import { postOrPutSysUserApi } from '@/api/system'
-  import { ElMessage } from 'element-plus'
+  import { postOrPutSysUserApi } from '@/api/system';
+  import { ElMessage } from 'element-plus';
+  import { decryptHex } from '@/utils/aes.js';
 
-  const model = defineModel()
+  const model = defineModel();
 
   const props = defineProps({
     sysUser: Object
-  })
+  });
 
-  console.log(props.sysUser)
+  console.log(props.sysUser);
 
   // 账号表单对象
   const accountForm = reactive({
@@ -20,11 +21,15 @@
     nickName: '',
     status: 'enable',
     remark: ''
-  })
+  });
   // 校验规则
   const accountRules = {
     phoneNumber: [
-      { required: true, message: '请输入手机号', trigger: 'blur' },
+      {
+        required: true,
+        message: '请输入手机号',
+        trigger: 'blur'
+      },
       {
         pattern: /^1[3-9]\d{9}$/,
         message: '请输入手机号',
@@ -32,7 +37,11 @@
       }
     ],
     password: [
-      { required: true, message: '请输入密码', trigger: 'blur' },
+      {
+        required: !props.sysUser, // 新增时必填，编辑时选填
+        message: '请输入密码',
+        trigger: 'blur'
+      },
       {
         min: 6,
         max: 20,
@@ -41,7 +50,11 @@
       }
     ],
     identity: [
-      { required: true, message: '请选择身份', trigger: 'change' }
+      {
+        required: true,
+        message: '请选择身份',
+        trigger: 'change'
+      }
     ],
     nickName: [
       {
@@ -55,47 +68,93 @@
         trigger: 'blur'
       }
     ]
-  }
+  };
 
-  const accountFormRef = ref(null)
+  const accountFormRef = ref(null);
 
-  const emit = defineEmits(['success', 'close'])
+  const emit = defineEmits(['success', 'close']);
 
   // 确定提交
   const onConfirm = () => {
+    // 动态设置密码字段的必填规则
+    accountRules.password[0].required = !props.sysUser;
+    
     accountFormRef.value.validate(async (valid) => {
-      if (!valid) return
+      if (!valid) return;
       // 调用接口
-      await postOrPutSysUserApi(accountForm)
+      await postOrPutSysUserApi(accountForm);
       // 成功的提示
-      ElMessage.success(props.sysUser ? '编辑成功' : '新增成功')
+      ElMessage.success(
+        props.sysUser ? '编辑成功' : '新增成功'
+      );
       // 通知父组件（重新获取列表）
-      emit('success')
+      emit('success');
       // 重置表单项
-      onCancel()
-    })
-  }
+      onCancel();
+    });
+  };
 
   // 取消
   const onCancel = () => {
     // 关闭对话框
-    emit('close')
+    emit('close');
     // 重置表单
-    accountFormRef.value.resetFields()
-    accountForm.status = 'enable'
-    accountForm.remark = ''
-  }
+    accountFormRef.value.resetFields();
+    accountForm.status = 'enable';
+    accountForm.remark = '';
+  };
 
   // 对话框打开回调
   const onOpen = () => {
+    // 动态设置密码字段的必填规则
+    accountRules.password[0].required = !props.sysUser;
+    
     if (props.sysUser) {
       // 回显，把接收到的 sysUser 的属性值依次赋值给 accountForm 的属性
-
       Object.keys(props.sysUser).forEach((key) => {
-        accountForm[key] = props.sysUser[key]
-      })
+        // 密码需要解密后显示
+        if (key === 'password' && props.sysUser[key]) {
+          try {
+            accountForm[key] = decryptHex(props.sysUser[key]);
+          } catch (e) {
+            // 解密失败时保持为空
+            accountForm[key] = '';
+          }
+        } else {
+          accountForm[key] = props.sysUser[key];
+        }
+      });
+    } else {
+      // 新增模式下，清空表单
+      accountFormRef.value.resetFields();
+      accountForm.phoneNumber = '';
+      accountForm.password = '';
+      accountForm.identity = '';
+      accountForm.nickName = '';
+      accountForm.status = 'enable';
+      accountForm.remark = '';
     }
-  }
+  };
+  
+  // 监听 sysUser 变化，确保在模式切换时正确重置表单
+  watch(
+    () => props.sysUser,
+    (newVal) => {
+      // 更新密码字段的必填规则
+      accountRules.password[0].required = !newVal;
+      
+      if (!newVal) {
+        // 切换到新增模式时，清空表单
+        accountFormRef.value.resetFields();
+        accountForm.phoneNumber = '';
+        accountForm.password = '';
+        accountForm.identity = '';
+        accountForm.nickName = '';
+        accountForm.status = 'enable';
+        accountForm.remark = '';
+      }
+    }
+  );
 </script>
 <script>
   export default {
@@ -120,20 +179,22 @@
       <el-form-item label="用户手机号" prop="phoneNumber">
         <el-input
           type="number"
-          placeholder="请输入用户手机号"
+          :disabled="!!props.sysUser"
+          :placeholder="
+            props.sysUser ? '账号不可修改' : '请输入用户手机号'
+          "
           v-model="accountForm.phoneNumber"
         />
       </el-form-item>
       <el-form-item
         label="用户密码"
-        :prop="props.sysUser ? '' : 'password'"
+        prop="password"
       >
         <el-input
           type="password"
           show-password
-          :disabled="!!props.sysUser"
           :placeholder="
-            props.sysUser ? '密码不可修改' : '请输入用户密码'
+            props.sysUser ? '请输入新密码' : '请输入用户密码'
           "
           v-model.trim="accountForm.password"
         />

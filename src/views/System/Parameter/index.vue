@@ -1,80 +1,76 @@
 <script setup>
-  import { getDictDataListApi } from '@/api/system'
+  import { getArgListApi } from '@/api/system'
   import { reactive, ref } from 'vue'
-  import { useRoute } from 'vue-router'
-  import DictDataOps from './components/DictDataOps.vue'
-  const route = useRoute()
+  import ArgOps from './components/ArgOps.vue'
 
   const query = reactive({
-    value: '',
-    typeKey: route.query.typeKey,
+    name: '',
+    configKey: '',
     pageNo: 1,
     pageSize: 3
   })
 
-  // 字典详情(数据)列表
-  const dictDataList = ref([])
+  const argList = ref([])
   const total = ref(null)
-  getDictDataList()
+  getArgList()
 
-  // 获取字典详情（数据列表）
-  async function getDictDataList() {
-    const resp = await getDictDataListApi(query)
-    dictDataList.value = resp.list
+  async function getArgList() {
+    const resp = await getArgListApi(query)
+    argList.value = resp.list
     total.value = resp.totals
   }
 
-  // 每页编号的显示规则
+  // 每页编号的显示/生成规则
   const indexMethod = (i) => {
     return i + 1 + (query.pageNo - 1) * query.pageSize
   }
 
   // 搜索
   const onSearch = () => {
-    if (query.value) {
-      getDictDataList()
+    if (query.name || query.configKey) {
+      getArgList()
     }
   }
 
   // 重置
   const onReset = () => {
-    if (query.value) {
-      query.value = ''
-      getDictDataList()
+    if (query.name || query.configKey) {
+      query.name = query.configKey = ''
+      getArgList()
     }
   }
 
   const visible = ref(false)
-  const dictData = ref(null)
+
+  const arg = ref(null)
 
   const onOpen = (row) => {
     visible.value = true
-    dictData.value = row
+    arg.value = row
   }
-
   const onClose = () => {
     visible.value = false
   }
 </script>
 <script>
   export default {
-    name: 'DictionaryDetail'
+    name: 'ParameterPage'
   }
 </script>
+
 <template>
   <section class="bit-app-container">
     <el-form label-position="top" :inline="true">
-      <el-form-item label="字典名称">
+      <el-form-item label="参数名称">
         <el-input
-          placeholder="请输入字典名称"
-          v-model.trim="query.value"
+          placeholder="请输入参数名称"
+          v-model.trim="query.name"
         />
       </el-form-item>
-      <el-form-item label="字典标签">
+      <el-form-item label="参数键名">
         <el-input
-          placeholder="请输入字典标签"
-          v-model="query.typeKey"
-          disabled
+          placeholder="请输入参数键名"
+          v-model.trim="query.configKey"
         />
       </el-form-item>
       <el-form-item label="操作" class="nolabel">
@@ -84,9 +80,9 @@
     </el-form>
     <div class="bit-table-box">
       <el-button
-        class="bit-btn-add"
         type="primary"
         plain
+        class="bit-btn-add"
         @click="onOpen(null)"
       >
         新增
@@ -98,17 +94,17 @@
         :header-cell-style="{
           textAlign: 'center'
         }"
-        :data="dictDataList"
+        :data="argList"
       >
         <el-table-column
-          label="字典编号"
+          label="参数编号"
           type="index"
           :index="indexMethod"
-          width="150"
+          width="180"
         />
-        <el-table-column label="字典标签" prop="value" />
-        <el-table-column label="字典键值" prop="dataKey" />
-        <el-table-column label="排序" prop="sort" />
+        <el-table-column label="参数名称" prop="name" />
+        <el-table-column label="参数键名" prop="configKey" />
+        <el-table-column label="参数键值" prop="value" />
         <el-table-column label="备注">
           <template #default="{ row }">
             {{ row.remark || '无' }}
@@ -129,16 +125,18 @@
         :page-sizes="[2, 3, 5]"
         background
         layout="total, sizes, prev, pager, next, jumper"
-        @current-change="getDictDataList"
-        @size-change="getDictDataList"
+        @size-change="getArgList"
+        @current-change="getArgList"
       />
     </div>
-    <DictDataOps
+
+    <ArgOps
       v-model="visible"
-      @success="getDictDataList"
+      :arg="arg"
       @close="onClose"
-      :dictData="dictData"
+      @success="getArgList"
     />
   </section>
 </template>
+
 <style lang="scss" scoped></style>

@@ -1,34 +1,38 @@
 <script setup>
-  // import { useUserStore } from '@/stores'
-  import { ElMessageBox, ElMessage } from 'element-plus'
-  import { useRouter } from 'vue-router'
-  import { ROLE_MAP } from '@/constants'
-  // const userStore = useUserStore()
-  const router = useRouter()
+  import { useUserStore } from '@/stores';
+  import { ElMessageBox, ElMessage } from 'element-plus';
+  import { useRouter } from 'vue-router';
+  import { ROLE_MAP } from '@/constants';
+  const userStore = useUserStore();
+  const router = useRouter();
 
   // 退出
   const onLogout = async () => {
     try {
-      await ElMessageBox.confirm('要走了么？不爱了么？', '友情提示', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
+      await ElMessageBox.confirm(
+        '要走了么？不爱了么？',
+        '友情提示',
+        {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      );
       // 执行退出登录 action 函数
-      // userStore.logoutAction()
+      await userStore.logoutAction();
       // 成功提示语
-      ElMessage.success('退出成功')
-      // 跳转至登录页
-      router.push('/login')
+      ElMessage.success('退出成功');
+      // 使用nextTick确保状态更新后再跳转
+      router.push('/login');
     } catch (e) {
-      ElMessage.info('已取消')
+      ElMessage.info('已取消');
     }
-  }
+  };
 </script>
 <script>
   export default {
     name: 'Header'
-  }
+  };
 </script>
 <template>
   <section class="header">
@@ -36,13 +40,12 @@
       <p>欢迎你</p>
       <p>
         <span class="name">
-          <!-- {{
-            userStore.userInfo.nickName || userStore.userInfo.userName
-          }} -->
-            稚名不带撇
+          {{
+            userStore.userInfo.nickName ||
+            userStore.userInfo.userName
+          }}
         </span>
-        ，超级管理员
-        <!-- ，{{ ROLE_MAP[userStore.userInfo.identity] }} -->
+        ，{{ ROLE_MAP[userStore.userInfo.identity] }}
       </p>
     </div>
     <div class="line"></div>

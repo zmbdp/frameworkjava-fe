@@ -1,24 +1,28 @@
-import { defineStore } from 'pinia'
-import { loginApi, getUserInfoApi } from '@/api/login'
+import { defineStore } from 'pinia';
+import {
+  loginApi,
+  getUserInfoApi,
+  logoutApi
+} from '@/api/login';
 
 const state = () => ({
   token: '',
   userInfo: {}
-})
+});
 
 const actions = {
   // 设置 token
   setToken(token) {
-    this.token = token
+    this.token = token;
   },
   removeToken() {
-    this.token = ''
+    this.token = '';
   },
   setUserInfo(userInfo) {
-    this.userInfo = userInfo
+    this.userInfo = userInfo;
   },
   removeUserInfo() {
-    this.userInfo = {}
+    this.userInfo = {};
   },
   // 登录 action
   loginAction({ phone, password }) {
@@ -26,8 +30,8 @@ const actions = {
       // 调用登录接口
       loginApi({ phone, password })
         .then((res) => {
-          this.setToken(res.accessToken)
-          resolve()
+          this.setToken(res.accessToken);
+          resolve();
           // 注意：因为使用了pinia状态持久化插件，因此当数据存储在pinia中的时候，也会在本地存储一份该数据
           // pinia中的数据是保存在内存中（临时存储），页面刷新数据就丢失后了；只有把数据存储在本地，这样的话，数据刷新才不丢失。
           // 今后操作数据的原则：
@@ -35,9 +39,9 @@ const actions = {
           // 2. 当页面刷新的时候，插件会自动将本地存储中的数据给 pinia 中的数据赋值，从而保证了 pinia 中的数据刷新不丢失
         })
         .catch((error) => {
-          reject(error)
-        })
-    })
+          reject(error);
+        });
+    });
   },
   // 获取用户信息 action
   getUserInfoAction() {
@@ -45,24 +49,36 @@ const actions = {
       // 发请求
       getUserInfoApi()
         .then((userInfo) => {
-          this.setUserInfo(userInfo)
-          resolve()
+          this.setUserInfo(userInfo);
+          resolve();
         })
         .catch((error) => {
-          reject(error)
-        })
-    })
+          reject(error);
+        });
+    });
   },
   // 退出 action
   logoutAction() {
-    this.removeToken()
-    this.removeUserInfo()
+    return new Promise((resolve) => {
+      logoutApi()
+        .then(() => {
+          this.removeToken();
+          this.removeUserInfo();
+          resolve();
+        })
+        .catch(() => {
+          // 即使后端调用失败，也要清除本地token和用户信息
+          this.removeToken();
+          this.removeUserInfo();
+          resolve();
+        });
+    });
   }
-}
+};
 
 export const useUserStore = defineStore('user', {
   state,
   actions,
   // 数据持久化
   persist: true
-})
+});

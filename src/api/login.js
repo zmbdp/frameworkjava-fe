@@ -24,3 +24,13 @@ export const getUserInfoApi = () => {
     url: '/admin/sys_user/login_info/get'
   })
 }
+
+/**
+ * 登出
+ */
+export const logoutApi = () => {
+  return request({
+    method: 'DELETE',
+    url: '/admin/sys_user/logout'
+  })
+}
